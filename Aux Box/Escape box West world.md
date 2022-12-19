@@ -22,6 +22,8 @@ AngularJS-powered HTML5 Markdown editor.
 - [1 Interrupt](https://es.aliexpress.com/item/32840360301.html)
 - 1 Box with two side. I use a reclied box of a drill machine.
 
+![Fotos](Photos/IMG_20221203_131615.jpg)
+
 Markdown is a lightweight markup language based on the formatting conventions
 that people naturally use in email.
 As [John Gruber] writes on the [Markdown site][df1]
