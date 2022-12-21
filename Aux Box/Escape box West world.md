@@ -5,6 +5,7 @@
 
 [![Build Status](https://travis-ci.org/joemccann/dillinger.svg?branch=master)](https://travis-ci.org/joemccann/dillinger)
 
+[![Hola](https://google.com)]
 Dillinger is a cloud-enabled, mobile-ready, offline-storage compatible,
 AngularJS-powered HTML5 Markdown editor.
 
@@ -20,6 +21,7 @@ AngularJS-powered HTML5 Markdown editor.
 - [1 Baterie holder](https://es.aliexpress.com/item/32820208922.html)
 - [1 Analog Joystick](https://es.aliexpress.com/item/32683242155.html)
 - [1 Interrupt](https://es.aliexpress.com/item/32840360301.html)
+- [1 Speaker](https://es.aliexpress.com/item/4000130830502.html)
 - 1 Box with two side. I use a reclied box of a drill machine.
 
 ![Fotos](Photos/IMG_20221203_131615.jpg)
@@ -164,8 +166,7 @@ your preferred browser.
 
 ```sh
 127.0.0.1:8000
-```
-
+`````
 ## License
 
 MIT
