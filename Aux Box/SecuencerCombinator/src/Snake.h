@@ -3,15 +3,16 @@
 #include <Adafruit_GFX.h>
 #include <LowPower.h>
 #include "Config.h"
-
+#define LONG_MAX INTENTOS+1      // maxima longitud de la serpiente hace el primero y el ultimo
 #define STEPVEL (VMAX - VMIN) / LONG_MAX
-boolean hayCombinacion = false;
+
 Adafruit_8x8matrix matrix = Adafruit_8x8matrix();
 struct
 {
   char fila;
   char columna;
 } serpiente[LONG_MAX], movimiento, fruta;
+
 enum
 {
   Up = 1,
@@ -19,11 +20,14 @@ enum
   Right = 4,
   Left = 8
 } direccion;
+
 boolean hayFruta = false;
-//int intervaloFrutaActual;
+boolean hayCombinacion = false;
+boolean serpienteMuerta = false;
+
 char longActual = 1;
 int velocidad = VMAX; // 250
-char coordenadas[] = "N40 39.959  E03 38.179  GAME OVER";
+char coordenadas[] = MENSAJE_FINAL;
 
 static const uint8_t PROGMEM
     smile_bmp[] =
@@ -53,15 +57,13 @@ static const uint8_t PROGMEM
          B10100101,
          B01000010,
          B00111100};
-/*#define DOWN 0x02
-#define UP 0X01
-#define RIGHT 0x04
-#define LEFT 0x08*/
+
 volatile byte wakeupSource;
 void wakeUp(void)
 {
   wakeupSource = 1;
 }
+// Comprueba el Joystick y devuelve 0 si noha cambiado o un valor con la direccion seleccionada
 byte leeJoystick()
 {
   byte out = 0;
@@ -78,7 +80,7 @@ byte leeJoystick()
     out |= Right;
   else if (y < 400)
     out |= Left;
-  Serial.println(out, HEX);
+  //Serial.println(out, HEX);
   if (out == anterior)
     return 0;
 
@@ -87,37 +89,20 @@ byte leeJoystick()
 }
 void iniJuego()
 {
-  finSerpienteFlag = false;
   serpiente[0].fila = serpiente[0].columna = 4;
   direccion = Up;
-  movimiento.fila = 1;
-  movimiento.columna = 0;
+  /*movimiento.fila = 1;
+  movimiento.columna = 0;*/
   longActual = 1;
   hayFruta = false;
   finSerpienteFlag = false;
   velocidad = VMAX;
+  hayCombinacion = false;
 }
 
 void setupSnake() // Comienzo del juego
 {
-  // Serial.println("Ini Juego");
-  matrix.begin(0x70); // direccion I2C display
-  pinMode(DERECHA_PIN, INPUT_PULLUP);
-  pinMode(IZQUIERDA_PIN, INPUT_PULLUP);
-  pinMode(LEDD, OUTPUT);
-  pinMode(LEDI, OUTPUT);
-  digitalWrite(LEDD, HIGH);
-  digitalWrite(LEDI, HIGH);
   randomSeed(analogRead(A1));
-  matrix.setRotation(1);
-  matrix.setTextSize(1);
-  matrix.setTextWrap(false); // we dont want text to wrap so it scrolls nicely
-  matrix.setTextColor(LED_ON);
-  /*scrollMensaje("Bienvenido a ARDUINO GAMES I");
-    scrollMensaje("SNAKE ");
-    scrollMensaje("Tienes que comerte al menos 10 manzanas");
-    scrollMensaje("GO");*/
-  // escribe();
   iniJuego();
 }
 
@@ -181,7 +166,7 @@ void goToLowPower()
     pinMode(led[n], OUTPUT);
   pinMode(PIN_ALTAVOZ, OUTPUT);
   matrix.begin(0x70);
-  tickApagar=millis();
+  tickApagar = millis();
   iniJuego();
 }
 inline void hasGanado() // Funcion cuando has ganado la  partida sonrie y saca coordenadas
@@ -193,48 +178,7 @@ inline void hasGanado() // Funcion cuando has ganado la  partida sonrie y saca c
   delay(3000);
   for (byte n = 0; n < 2; n++)
     scrollMensaje(coordenadas);
-  goToLowPower();
-}
-void escribe()
-{
-  char nombre[] = "AAAAAA";
-  byte n = 0;
-  char letra = 65;
-  while (1)
-  {
-    matrix.clear();
-    matrix.setCursor(0, 0);
-    matrix.write(letra);
-    matrix.writeDisplay();
-    while ((digitalRead(DERECHA_PIN)) && (digitalRead(IZQUIERDA_PIN)))
-      ;
-    if (digitalRead(IZQUIERDA_PIN))
-    { // Siguiente letra
-      if (letra == 91)
-        n--; // vuelta a empezar
-      nombre[n] = letra;
-      n++;
-      if (n == 6)
-        break;
-    }
-    else
-    {
-      letra++;
-      if (letra == 92)
-        letra = 65;
-    }
-    delay(500);
-  }
-  nombre[6] = 0;
-  while (1)
-    scrollMensaje(nombre);
-  while ((digitalRead(DERECHA_PIN)) && (digitalRead(IZQUIERDA_PIN)))
-    ;
-  if (digitalRead(IZQUIERDA_PIN))
-    n = 6;
-  else
-    n = 9;
-  // 65 a 93
+  
 }
 
 inline void frutas() // Se encarga de ir sacando las frutas
@@ -271,7 +215,8 @@ void finSerpiente()
   matrix.drawBitmap(0, 0, frown_bmp, 8, 8, LED_ON);
   matrix.writeDisplay();
   delay(3000);
-  errorSecuencia = true;
+  errorSecuencia = true; // Le dice a simon que ha fallado
+  serpienteMuerta = true;
   iniJuego();
 }
 inline void mueve() // Mueve la serpiente
@@ -297,10 +242,11 @@ void lazoSerpiente()
   byte joystickValue = leeJoystick();
   if (((millis() - tiempo) > (unsigned long)velocidad) || joystickValue)
   {
-    if ((millis() - tickApagar) > TIEMPO_APAGADO_SIN_PULSAR_TECLA)
-      goToLowPower();
+    /*if ((millis() - tickApagar) > TIEMPO_APAGADO_SIN_PULSAR_TECLA)
+      goToLowPower();*/
     if (joystickValue)
     {
+      tickApagar=millis();
       if (direccion == Right || direccion == Left)
       {
         if (joystickValue & Up)

@@ -3,24 +3,16 @@
 #include "Config.h"
 int secuencia[INTENTOS];
 
-
 bool delayOn = false;
-
-
 
 void delayLowPower(unsigned long tiempo)
 {
-  // aqui deberia de salir y hacer funcionar el simon
-  // LowPower.powerDown(tiempo, ADC_OFF, BOD_OFF);
-  // delayOn=true;
-  // int tiempo=500;
   unsigned long tick = millis();
   while ((millis() - tick) < tiempo)
   {
     lazoSerpiente();
     delay(10);
   }
-  // delay(500);
 }
 void enciendeLed(int n)
 {
@@ -35,9 +27,11 @@ boolean leePulsador(int cual)
   for (int k = 0; k < tiempo; k++)
     for (int n = 0; n < BOTONES; n++)
     {
+      if (serpienteMuerta)
+        return false;
       if (!digitalRead(led[n]))
       {
-        tickApagar=millis();
+        tickApagar = millis();
         enciendeLed(n);
         if (n == cual)
           return true;
@@ -55,25 +49,7 @@ void todosLeds(boolean encendidos)
   for (int n = 0; n < BOTONES; n++)
     digitalWrite(led[n], encendidos);
 }
-/*void escribeCadena(char *cadena)
-{
-  int n = 0;
-  int k[8];
-  int c;
-  boolean punto = false;
-  while (cadena[n] != 0)
-  {
-    c = cadena[n];
-    if (c == 32)c = 12; else c -= 48;
-    if (cadena[n + 1] == '.') {
-      punto = true;
-      n++;
-    } else punto = false ;
 
-    n++;
-  }
-}
-*/
 void lucesFinal()
 {
   // azul,rojo,verde
@@ -102,9 +78,9 @@ void ledsInicio()
   for (int n = 0; n < INTENTOS; n++)
   {
     secuencia[n] = random(BOTONES); // para eso utiliza randon
-    Serial.print(secuencia[n]);
+    // Serial.print(secuencia[n]);
   }
-  Serial.println();
+  // Serial.println();
 
   for (int k = 0; k < VECES_INTERMITENTE; k++)
   {
@@ -132,14 +108,12 @@ void ledsError()
 void setupSimon()
 {
 
-  // put your setup code here, to n once:
-  // Serial.begin(115000);
   randomSeed(analogRead(A0)); // inicia el array con los numeros aleatorios
   for (int n = 0; n < BOTONES; n++)
   {
     pinMode(led[n], OUTPUT);
   }
-  tickApagar=millis();
+  tickApagar = millis();
 }
 
 void loopSimon()
@@ -147,20 +121,32 @@ void loopSimon()
   // put your main code here, to run repeatedly:
   errorSecuencia = false;
   ledsInicio();
-  for (int k = 0; k < INTENTOS; k++)
+  for (int k = 1; k < (INTENTOS + 1); k++)
   {
+    Serial.println();
+    Serial.print("k=");
+    Serial.print(k);
     while (hayFruta)
+    {
       lazoSerpiente();
+    }
+    if (serpienteMuerta)
+      break;
+    hayCombinacion = false;
+    // muestra secuencia
     for (int n = 0; n < k; n++)
-    { // muestra secuencia
+    {
+      Serial.print(" n=");
+      Serial.print(n);
       enciendeLed(secuencia[n]);
       delayLowPower(TIEMPO_ON);
     }
+    // Comprueba secuencia
     for (int n = 0; n < k; n++)
     {
       if (!leePulsador(secuencia[n]))
       {
-        tone(PIN_ALTAVOZ,NOTA_MAL,500);
+        tone(PIN_ALTAVOZ, NOTA_MAL, 500);
         finSerpiente();
         ledsError();
         errorSecuencia = true;
@@ -169,31 +155,18 @@ void loopSimon()
       else
         hayCombinacion = true;
     }
-    if (errorSecuencia)
-    {
 
-      
-      break;
-    }
     todosLeds(LOW);
     delayLowPower(TIEMPO_ON);
     todosLeds(HIGH);
     delayLowPower(TIEMPO_OFF);
   }
-  if (!errorSecuencia) //sale sin error has ganado
+  if (!errorSecuencia) // sale sin error has ganado
   {
-    // for (byte n = 0; n < 3; n++)
-
-    //lucesFinal();
-  while(!finSerpienteFlag)lazoSerpiente();
-    // for (int n = 0; n < BOTONES; n++)      pinMode(led[n], INPUT);
+    while (!finSerpienteFlag)
+      lazoSerpiente();
+    goToLowPower();
   }
-
-  /*
-  attachInterrupt(digitalPinToInterrupt(2), wakeUp, HIGH);
-  attachInterrupt(digitalPinToInterrupt(3), wakeUp, HIGH);
-  LowPower.powerDown(SLEEP_FOREVER, ADC_OFF, BOD_OFF);
-  detachInterrupt(digitalPinToInterrupt(2));
-  detachInterrupt(digitalPinToInterrupt(3));
-  for (int n = 0; n < BOTONES; n++) pinMode(led[n], OUTPUT);*/
+  serpienteMuerta = false;
+  iniJuego();
 }
