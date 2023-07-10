@@ -3,7 +3,7 @@
 #include <Adafruit_GFX.h>
 #include <LowPower.h>
 #include "Config.h"
-#define LONG_MAX INTENTOS+1      // maxima longitud de la serpiente hace el primero y el ultimo
+#define LONG_MAX INTENTOS + 1 // maxima longitud de la serpiente hace el primero y el ultimo
 #define STEPVEL (VMAX - VMIN) / LONG_MAX
 
 Adafruit_8x8matrix matrix = Adafruit_8x8matrix();
@@ -11,7 +11,7 @@ struct
 {
   char fila;
   char columna;
-} serpiente[LONG_MAX], movimiento, fruta;
+} serpiente[LONG_MAX], fruta;
 
 enum
 {
@@ -21,9 +21,9 @@ enum
   Left = 8
 } direccion;
 
-boolean hayFruta = false;
-boolean hayCombinacion = false;
-boolean serpienteMuerta = false;
+boolean hayFruta = false;        // hay una fruta
+boolean hayCombinacion = false;  // hay que poner una fruta
+boolean serpienteMuerta = false; // la serpiente murio
 
 char longActual = 1;
 int velocidad = VMAX; // 250
@@ -80,35 +80,33 @@ byte leeJoystick()
     out |= Right;
   else if (y < 400)
     out |= Left;
-  //Serial.println(out, HEX);
+  // Serial.println(out, HEX);
   if (out == anterior)
     return 0;
 
   anterior = out;
   return out;
 }
-void iniJuego()
+
+void iniSnake()
 {
   serpiente[0].fila = serpiente[0].columna = 4;
   direccion = Up;
-  /*movimiento.fila = 1;
-  movimiento.columna = 0;*/
   longActual = 1;
   hayFruta = false;
   finSerpienteFlag = false;
   velocidad = VMAX;
   hayCombinacion = false;
+  serpienteMuerta = false;
 }
 
 void setupSnake() // Comienzo del juego
 {
   randomSeed(analogRead(A1));
-  iniJuego();
 }
 
 inline void dibujaSerpiente() // pinta la serpiente
 {
-  // Serial.println("Dibuja");
   matrix.clear(); // clear display
   for (byte n = 0; n < longActual; n++)
     matrix.drawPixel(serpiente[n].fila, serpiente[n].columna, LED_ON);
@@ -167,7 +165,6 @@ void goToLowPower()
   pinMode(PIN_ALTAVOZ, OUTPUT);
   matrix.begin(0x70);
   tickApagar = millis();
-  iniJuego();
 }
 inline void hasGanado() // Funcion cuando has ganado la  partida sonrie y saca coordenadas
 {
@@ -176,9 +173,8 @@ inline void hasGanado() // Funcion cuando has ganado la  partida sonrie y saca c
   matrix.drawBitmap(0, 0, smile_bmp, 8, 8, LED_ON);
   matrix.writeDisplay();
   delay(3000);
-  for (byte n = 0; n < 2; n++)
+  for (byte n = 0; n < REP_MENSAJE_FINAL; n++)
     scrollMensaje(coordenadas);
-  
 }
 
 inline void frutas() // Se encarga de ir sacando las frutas
@@ -191,8 +187,8 @@ inline void frutas() // Se encarga de ir sacando las frutas
       longActual++; // si se la ha comido crece la serpiente
       velocidad -= STEPVEL;
       if (longActual == LONG_MAX)
-        hasGanado(); // Si es lo suficientemente grande se acabo el juego
-      hayFruta = false;
+        hasGanado();    // Si es lo suficientemente grande se acabo el juego
+      hayFruta = false; // se come la fruta ya no hay
     }
   }
   else
@@ -209,44 +205,37 @@ inline void frutas() // Se encarga de ir sacando las frutas
     }
   }
 }
-void finSerpiente()
+void hasPerdido()
 {
+  tone(PIN_ALTAVOZ, NOTA_MAL, 500);
   matrix.clear();
   matrix.drawBitmap(0, 0, frown_bmp, 8, 8, LED_ON);
   matrix.writeDisplay();
   delay(3000);
-  errorSecuencia = true; // Le dice a simon que ha fallado
-  serpienteMuerta = true;
-  iniJuego();
 }
 inline void mueve() // Mueve la serpiente
 {
-  // Serial.println("mueve" + String ((int)longActual));
-  // Serial.println ("fila:" + String((int)serpiente[0].fila) + " Col:" + String((int)serpiente[0].columna));
   for (byte n = longActual; n >= 1; n--)
     serpiente[n] = serpiente[n - 1];
   serpiente[0].columna += (direccion == Up || direccion == Down) ? ((direccion == Down) ? 1 : -1) : 0;
   serpiente[0].fila += (direccion == Right || direccion == Left) ? ((direccion == Right) ? 1 : -1) : 0;
   if (fueraTablero() || estaEnSerpiente(serpiente[0].fila, serpiente[0].columna, 1)) // si se sale o choca se acaba
   {
-    finSerpiente();
+    Serial.println("CHOQUE");
+    serpienteMuerta = true;
   }
 }
-void lazoSerpiente()
+bool lazoSerpiente()
 {
   // LEER 250MSG
 
   static unsigned long tiempo = millis();
-  // Serial.println(tiempo);
-  // boolean teclaDer,teclaIzda;
   byte joystickValue = leeJoystick();
   if (((millis() - tiempo) > (unsigned long)velocidad) || joystickValue)
   {
-    /*if ((millis() - tickApagar) > TIEMPO_APAGADO_SIN_PULSAR_TECLA)
-      goToLowPower();*/
     if (joystickValue)
     {
-      tickApagar=millis();
+      tickApagar = millis();
       if (direccion == Right || direccion == Left)
       {
         if (joystickValue & Up)
@@ -262,14 +251,13 @@ void lazoSerpiente()
           direccion = Left;
       }
     }
-    // Serial.println("DIR:"+String(direccion));
 
     mueve();
     dibujaSerpiente();
     frutas();
-    // int resto = velocidad - (millis() - tiempo);
-    delay(2);          // delay((resto>20)?resto:20);//conviene esperar al resto o vale con soltar
+    delay(2);
     tiempo = millis(); // espera a soltar
     delay(1);
   }
+  return serpienteMuerta;
 }
