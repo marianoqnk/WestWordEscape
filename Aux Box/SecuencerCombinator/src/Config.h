@@ -1,5 +1,5 @@
 #pragma once
-bool errorSecuencia = false;
+//bool errorSecuencia = false;
 bool finSerpienteFlag=false;
 unsigned long tickApagar;
 #define MENSAJE_FINAL "N40 39.959  E03 38.179  GAME OVER"
@@ -49,11 +49,11 @@ int partitura1[]={NOTA_LA,NOTA_SI,NOTA_LA,NOTA_SI,NOTA_LA,NOTA_SOL,NOTA_FA,NOTA_
 int partitura2[]={NOTA_SOL,NOTA_LA,NOTA_SOL,NOTA_LA,NOTA_SOL,NOTA_MI,NOTA_RE,NOTA_RE,NOTA_MI};
 #define NOTA_MAL 500
 
-enum colores
+/*enum colores
 {
   azul = 1,
   rojo = 2,
   verde = 3,
   naranja = 4
-};
+};*/
 
