@@ -8,13 +8,12 @@ bool delayOn = false;
 void delayLowPower(unsigned long tiempo)
 {
   unsigned long tick = millis();
-  while ((millis() - tick) < tiempo)
+  while ((millis() - tick) < tiempo && !lazoSerpiente())
   {
-    lazoSerpiente();
     delay(10);
   }
 }
-void enciendeLed(int n)
+void enciendeLedAndPita(int n)
 {
   tone(PIN_ALTAVOZ, notas[n], 100);
   digitalWrite(led[n], LOW);
@@ -32,7 +31,7 @@ boolean leePulsador(int cual)
       if (!digitalRead(led[n]))
       {
         tickApagar = millis();
-        enciendeLed(n);
+        enciendeLedAndPita(n);
         if (n == cual)
           return true;
         else
@@ -56,17 +55,17 @@ void lucesFinal()
 
   for (byte n = 0; n < 5; n++)
   {
-    enciendeLed(0); // azul
+    enciendeLedAndPita(0); // azul
     delayLowPower(TIEMPO_OFF);
   }
   for (byte n = 0; n < 7; n++)
   {
-    enciendeLed(1); // rojo
+    enciendeLedAndPita(1); // rojo
     delayLowPower(TIEMPO_OFF);
   }
   for (byte n = 0; n < 4; n++)
   {
-    enciendeLed(2); // Verde
+    enciendeLedAndPita(2); // Verde
     delayLowPower(TIEMPO_OFF);
   }
   delayLowPower(1000);
@@ -78,9 +77,7 @@ void ledsInicio()
   for (int n = 0; n < INTENTOS; n++)
   {
     secuencia[n] = random(BOTONES); // para eso utiliza randon
-    // Serial.print(secuencia[n]);
   }
-  // Serial.println();
 
   for (int k = 0; k < VECES_INTERMITENTE; k++)
   {
@@ -94,6 +91,7 @@ void ledsInicio()
   todosLeds(HIGH);
   delayLowPower(TIEMPO_ON);
 }
+
 void ledsError()
 {
 
@@ -115,58 +113,50 @@ void setupSimon()
   }
   tickApagar = millis();
 }
-
-void loopSimon()
+void secuenciaCorrecta()
 {
-  // put your main code here, to run repeatedly:
-  errorSecuencia = false;
+  todosLeds(LOW);
+  delayLowPower(TIEMPO_ON);
+  todosLeds(HIGH);
+  delayLowPower(TIEMPO_OFF);
+}
+bool loopSimon() // true win false loss
+{
+
   ledsInicio();
   for (int k = 1; k < (INTENTOS + 1); k++)
   {
-    Serial.println();
-    Serial.print("k=");
-    Serial.print(k);
-    while (hayFruta)
-    {
-      lazoSerpiente();
-    }
+
+    while (hayFruta && !lazoSerpiente())
+      ;
     if (serpienteMuerta)
-      break;
+      return false;
     hayCombinacion = false;
     // muestra secuencia
     for (int n = 0; n < k; n++)
     {
-      Serial.print(" n=");
-      Serial.print(n);
-      enciendeLed(secuencia[n]);
+      enciendeLedAndPita(secuencia[n]);
       delayLowPower(TIEMPO_ON);
     }
     // Comprueba secuencia
+    if (serpienteMuerta)
+      return false;
     for (int n = 0; n < k; n++)
     {
       if (!leePulsador(secuencia[n]))
       {
-        tone(PIN_ALTAVOZ, NOTA_MAL, 500);
-        finSerpiente();
-        ledsError();
-        errorSecuencia = true;
-        break;
+        return false;
       }
       else
         hayCombinacion = true;
     }
-
-    todosLeds(LOW);
-    delayLowPower(TIEMPO_ON);
-    todosLeds(HIGH);
-    delayLowPower(TIEMPO_OFF);
+    if (serpienteMuerta)
+      return false;
+    secuenciaCorrecta();
   }
-  if (!errorSecuencia) // sale sin error has ganado
-  {
-    while (!finSerpienteFlag)
-      lazoSerpiente();
-    goToLowPower();
-  }
-  serpienteMuerta = false;
-  iniJuego();
+  while (hayFruta && !lazoSerpiente())
+    ;
+  if (serpienteMuerta)
+    return false;
+  return true;
 }

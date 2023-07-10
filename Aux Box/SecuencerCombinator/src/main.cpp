@@ -14,17 +14,32 @@ void setup()
 {
 
   Serial.begin(115000);
-  char mensajeInicial[] = MENSAJE_INICIAL;
+  // char mensajeInicial[] = MENSAJE_INICIAL;
   pinMode(LED_BUILTIN, OUTPUT);
   digitalWrite(LED_BUILTIN, LOW);
   iniMatriz8x8();
-  //scrollMensaje(mensajeInicial);
+  // scrollMensaje(mensajeInicial);
   setupSnake();
   setupSimon();
   tone(PIN_ALTAVOZ, NOTA_DO, 500);
 }
 void loop()
 {
+  Serial.println("LAZO");
+  iniSnake();
   lazoSerpiente();
-  loopSimon();
+  if (loopSimon())
+  {
+    Serial.println("WIN");
+    hasGanado();
+    delay(1000);
+    goToLowPower();
+  }
+  else
+  {
+    hasPerdido();
+    Serial.println("LOSS");
+    if ((millis()-tickApagar) > TIEMPO_APAGADO_SIN_PULSAR_TECLA)
+      goToLowPower();
+  }
 }
