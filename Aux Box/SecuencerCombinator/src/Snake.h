@@ -7,13 +7,13 @@
 #define STEPVEL (VMAX - VMIN) / LONG_MAX
 
 Adafruit_8x8matrix matrix = Adafruit_8x8matrix();
-struct
+struct _punto
 {
   char fila;
   char columna;
 } serpiente[LONG_MAX], fruta;
 
-enum
+enum _direcciones
 {
   Up = 1,
   Down = 2,
@@ -27,7 +27,7 @@ boolean serpienteMuerta = false; // la serpiente murio
 
 char longActual = 1;
 int velocidad = VMAX; // 250
-char coordenadas[] = MENSAJE_FINAL;
+
 
 static const uint8_t PROGMEM
     smile_bmp[] =
@@ -168,6 +168,7 @@ void goToLowPower()
 }
 inline void hasGanado() // Funcion cuando has ganado la  partida sonrie y saca coordenadas
 {
+  char coordenadas[] = MENSAJE_FINAL;
   finSerpienteFlag = true;
   matrix.clear();
   matrix.drawBitmap(0, 0, smile_bmp, 8, 8, LED_ON);

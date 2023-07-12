@@ -3,7 +3,7 @@
 #include "Config.h"
 int secuencia[INTENTOS];
 
-bool delayOn = false;
+//bool delayOn = false;
 
 void delayLowPower(unsigned long tiempo)
 {
