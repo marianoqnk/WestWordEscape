@@ -4,8 +4,9 @@ bool finSerpienteFlag=false;
 unsigned long tickApagar;
 #define MENSAJE_FINAL "N40 39.959  E03 38.179  GAME OVER"
 #define REP_MENSAJE_FINAL 1
-#define MENSAJE_INICIAL "MAQUINA PARA DOS OPERADORES: UNO COMBINA Y OTRO SECUENCIA"
-#define INTENTOS 3 //combinaciones
+//#define MENSAJE_INICIAL "MAQUINA PARA DOS OPERADORES: UNO COMBINA Y OTRO SECUENCIA"
+#define INTENTOS 10 //combinaciones
+//define ONLY_SNAKE
 
 
 //Pines

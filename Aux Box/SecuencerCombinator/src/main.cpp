@@ -14,11 +14,14 @@ void setup()
 {
 
   Serial.begin(115000);
-  // char mensajeInicial[] = MENSAJE_INICIAL;
+
   pinMode(LED_BUILTIN, OUTPUT);
   digitalWrite(LED_BUILTIN, LOW);
   iniMatriz8x8();
-  // scrollMensaje(mensajeInicial);
+#ifdef MENSAJE_INICIAL
+  char mensajeInicial[] = MENSAJE_INICIAL;
+  scrollMensaje(mensajeInicial);
+#endif
   setupSnake();
   setupSimon();
   tone(PIN_ALTAVOZ, NOTA_DO, 500);
@@ -27,7 +30,14 @@ void loop()
 {
   Serial.println("LAZO");
   iniSnake();
-  lazoSerpiente();
+#ifdef ONLY_SNAKE
+  while (1)
+  {
+    lazoSerpiente();
+    hayCombinacion = true;
+  }
+#endif
+
   if (loopSimon())
   {
     Serial.println("WIN");
@@ -39,7 +49,7 @@ void loop()
   {
     hasPerdido();
     Serial.println("LOSS");
-    if ((millis()-tickApagar) > TIEMPO_APAGADO_SIN_PULSAR_TECLA)
+    if ((millis() - tickApagar) > TIEMPO_APAGADO_SIN_PULSAR_TECLA)
       goToLowPower();
   }
 }

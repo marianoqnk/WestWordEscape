@@ -168,14 +168,17 @@ void goToLowPower()
 }
 inline void hasGanado() // Funcion cuando has ganado la  partida sonrie y saca coordenadas
 {
-  char coordenadas[] = MENSAJE_FINAL;
+  
   finSerpienteFlag = true;
   matrix.clear();
   matrix.drawBitmap(0, 0, smile_bmp, 8, 8, LED_ON);
   matrix.writeDisplay();
   delay(3000);
+  #ifdef MENSAJE_FINAL
+  char coordenadas[] = MENSAJE_FINAL;
   for (byte n = 0; n < REP_MENSAJE_FINAL; n++)
     scrollMensaje(coordenadas);
+  #endif
 }
 
 inline void frutas() // Se encarga de ir sacando las frutas
